@@ -2,7 +2,7 @@
 import os
 from pathlib import Path
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from torchvision import transforms, models
 import torch.nn as nn
 import torch.optim as optim
@@ -21,8 +21,12 @@ transform = transforms.Compose([
 ])
 
 dataset = CustomImageDataset(img_dir=img_dir, transform=transform)
-dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
+train_size = int(0.8 * len(dataset))
+val_size = len(dataset) - train_size
+train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
 
+train_loader = DataLoader(train_dataset, batch_size=16, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=16, shuffle=False)
 model = build_resnet50(len(dataset.classes),freeze_backbone=True)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -33,7 +37,12 @@ optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
 # Training loop
 for epoch in range(50):
-    for batch in dataloader:
+    # -------------------
+    # Training phase
+    # -------------------
+    model.train()
+    running_loss = 0.0
+    for batch in train_loader:
         inputs = batch["tensor"].to(device)
         labels = batch["label"].to(device)
 
@@ -44,4 +53,29 @@ for epoch in range(50):
         loss.backward()
         optimizer.step()
 
-    print(f"Epoch {epoch+1}: Loss = {loss.item():.4f}")
+        running_loss += loss.item()
+
+    avg_train_loss = running_loss / len(train_loader)
+
+    model.eval()
+    val_loss, correct = 0.0, 0
+    with torch.no_grad():
+        for batch in val_loader:
+            inputs = batch["tensor"].to(device)
+            labels = batch["label"].to(device)
+
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            val_loss += loss.item()
+
+            preds = outputs.argmax(dim=1)
+            correct += (preds == labels).sum().item()
+
+    avg_val_loss = val_loss / len(val_loader)
+    val_acc = correct / len(val_dataset)
+
+    print(f"Epoch {epoch+1}: "
+          f"Train Loss = {avg_train_loss:.4f}, "
+          f"Val Loss = {avg_val_loss:.4f}, "
+          f"Val Acc = {val_acc:.4f}")
+
