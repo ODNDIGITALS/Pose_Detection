@@ -6,9 +6,14 @@ from pathlib import Path
 import torch.optim as optim
 from torchvision import transforms, models
 from torch.utils.data import DataLoader, random_split
-
+from torch.utils.tensorboard import SummaryWriter  # Tensorboard
 from model import build_resnet50   
 from custom_dataset import CustomImageDataset
+from torch.optim.lr_scheduler import ReduceLROnPlateau # Learning Rate Scheduler
+from early_stopping import EarlyStopping
+
+
+writer = SummaryWriter(log_dir="runs/exp1") 
 
 base_dir = Path(__file__).resolve().parent.parent
 img_dir = os.path.join(base_dir,"training_images")
@@ -35,13 +40,15 @@ model.to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
-# Training loop
+scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5) 
+early_stopping = EarlyStopping(patience=8, min_delta=0.001)
+
+os.makedirs("checkpoints", exist_ok=True)
+global_step = 0
 for epoch in range(50):
-    # -------------------
-    # Training phase
-    # -------------------
     model.train()
     running_loss = 0.0
+    train_correct, total = 0, 0
     for batch in train_loader:
         inputs = batch["tensor"].to(device)
         labels = batch["label"].to(device)
@@ -53,9 +60,20 @@ for epoch in range(50):
         loss.backward()
         optimizer.step()
 
-        running_loss += loss.item()
+        running_loss += loss.item() # loss for this batch (before weight update)
+
+        preds = outputs.argmax(dim=1)
+        train_correct += (preds == labels).sum().item()
+        total += labels.shape[0]
+
+        writer.add_scalar("Loss/Train_Batch", loss.item(), global_step) # monitors batch losses for each epoch
+        global_step+=1
 
     avg_train_loss = running_loss / len(train_loader)
+    train_acc = train_correct / total
+
+    writer.add_scalar("Loss/Train_Epoch", avg_train_loss, epoch) # monitors epoch losses
+    writer.add_scalar("Accuracy/Train", train_acc, epoch)
 
     model.eval()
     val_loss, correct = 0.0, 0
@@ -74,8 +92,22 @@ for epoch in range(50):
     avg_val_loss = val_loss / len(val_loader)
     val_acc = correct / len(val_dataset)
 
+    early_stopping(avg_val_loss)     # early stopping
+    if early_stopping.early_stop:
+        print("Early stopping triggered!")
+        break
+
+    writer.add_scalar("Loss/Validation", avg_val_loss, epoch)
+    writer.add_scalar("Accuracy/Validation", val_acc, epoch)
+
+    scheduler.step(avg_val_loss) # updating learning rate on basis of vaidation loss
+    writer.add_scalar("LR", optimizer.param_groups[0]["lr"], epoch)
+
     print(f"Epoch {epoch+1}: "
           f"Train Loss = {avg_train_loss:.4f}, "
           f"Val Loss = {avg_val_loss:.4f}, "
           f"Val Acc = {val_acc:.4f}")
+    torch.save(model.state_dict(), f"checkpoints/model_epoch_{epoch+1}.pth")
+
+torch.save(model.state_dict(), "checkpoints/model_final.pth")
 
