@@ -1,13 +1,9 @@
 import os 
-from pathlib import Path
-# base_dir = Path(__file__).resolve().parent.parent
-# img_dir = os.path.join(base_dir,"training_images")
-# print("img_dir is:",img_dir)
-
 import torch 
-from torch.utils.data import Dataset
 from PIL import Image
+from pathlib import Path
 from torchvision import transforms 
+from torch.utils.data import Dataset
 
 transform = transforms.Compose([
     transforms.RandomRotation(degrees=30),

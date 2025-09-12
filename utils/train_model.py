@@ -1,14 +1,14 @@
 # train.py
 import os
-from pathlib import Path
 import torch
-from torch.utils.data import DataLoader, random_split
-from torchvision import transforms, models
 import torch.nn as nn
+from pathlib import Path
 import torch.optim as optim
+from torchvision import transforms, models
+from torch.utils.data import DataLoader, random_split
 
-from dataload import CustomImageDataset
 from model import build_resnet50   
+from dataload import CustomImageDataset
 
 base_dir = Path(__file__).resolve().parent.parent
 img_dir = os.path.join(base_dir,"training_images")
