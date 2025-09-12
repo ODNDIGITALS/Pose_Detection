@@ -8,7 +8,7 @@ from torchvision import transforms, models
 from torch.utils.data import DataLoader, random_split
 
 from model import build_resnet50   
-from dataload import CustomImageDataset
+from custom_dataset import CustomImageDataset
 
 base_dir = Path(__file__).resolve().parent.parent
 img_dir = os.path.join(base_dir,"training_images")
