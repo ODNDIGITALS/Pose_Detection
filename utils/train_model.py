@@ -40,8 +40,8 @@ model.to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=1e-3)
 
-scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=5) 
-early_stopping = EarlyStopping(patience=8, min_delta=0.001)
+scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3) 
+early_stopping = EarlyStopping(patience=6, min_delta=0.001)
 
 os.makedirs("checkpoints", exist_ok=True)
 global_step = 0
