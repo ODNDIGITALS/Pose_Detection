@@ -80,8 +80,7 @@ def download_all_images_from_pose_bucket(download_dir=TRAINING_DIR / "training_i
     return downloaded_data
 
 
-# if __name__ == "__main__":
-#     metadata = download_all_images_from_pose_bucket()
-#     print("Total logged:", len(metadata))
+metadata = download_all_images_from_pose_bucket()
+print("Total logged:", len(metadata))
 
 
