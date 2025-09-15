@@ -13,13 +13,15 @@ from model import build_resnet50
 from custom_dataset import CustomImageDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau # Learning Rate Scheduler
 from early_stopping import EarlyStopping
+import json
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+json_file = BASE_DIR/"Configs"/"training.json"
+
+with open(json_file, "r") as f:
+    training_data = json.load(f)
 
 writer = SummaryWriter(log_dir="runs/exp1") 
-
-base_dir = Path(__file__).resolve().parent.parent
-img_dir = os.path.join(base_dir,"training_images")
-print("img_dir is:",img_dir)
 
 transform = transforms.Compose([
     transforms.RandomRotation(degrees=30),
@@ -27,7 +29,7 @@ transform = transforms.Compose([
     transforms.ToTensor()
 ])
 
-dataset = CustomImageDataset(img_dir=img_dir, transform=transform)
+dataset = CustomImageDataset(json_file = json_file, transform=transform)
 train_size = int(0.8 * len(dataset))
 val_size = len(dataset) - train_size
 train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
@@ -70,6 +72,12 @@ for epoch in range(50):
 
         writer.add_scalar("Loss/Train_Batch", loss.item(), global_step) # monitors batch losses for each epoch
         global_step+=1
+        for fname in batch["file_name"]:
+           if fname in training_data:
+               training_data[fname]["status"] = "trained"
+
+        with open(json_file, "w") as f:
+              json.dump(training_data, f, indent=4)
 
     avg_train_loss = running_loss / len(train_loader)
     train_acc = train_correct / total
