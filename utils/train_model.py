@@ -1,6 +1,8 @@
 # train.py
 import os
 import torch
+import numpy as np
+import matplotlib.pyplot as plt
 import torch.nn as nn
 from pathlib import Path
 import torch.optim as optim
@@ -77,8 +79,9 @@ for epoch in range(50):
 
     model.eval()
     val_loss, correct = 0.0, 0
+    sample_images, sample_preds, sample_labels = [], [], []
     with torch.no_grad():
-        for batch in val_loader:
+        for batch_idx, batch in enumerate(val_loader):
             inputs = batch["tensor"].to(device)
             labels = batch["label"].to(device)
 
@@ -89,8 +92,26 @@ for epoch in range(50):
             preds = outputs.argmax(dim=1)
             correct += (preds == labels).sum().item()
 
+            # Save only first batch for visualization
+            if batch_idx == 0:
+                sample_images = inputs.cpu()
+                sample_preds = preds.cpu()
+                sample_labels = labels.cpu()
+
     avg_val_loss = val_loss / len(val_loader)
     val_acc = correct / len(val_dataset)
+    fig, axes = plt.subplots(2, 8, figsize=(16, 4))  # 16 images
+    for i, ax in enumerate(axes.flat):
+        if i < len(sample_images):
+            img = sample_images[i].numpy().transpose((1, 2, 0))
+            img = np.clip(img, 0, 1)
+            gt = dataset.classes[sample_labels[i]]
+            pred = dataset.classes[sample_preds[i]]
+            ax.imshow(img)
+            ax.set_title(f"GT:{gt}\nPred:{pred}", fontsize=7)
+            ax.axis("off")
+        else:
+            ax.axis("off")
 
     early_stopping(avg_val_loss)     # early stopping
     if early_stopping.early_stop:
