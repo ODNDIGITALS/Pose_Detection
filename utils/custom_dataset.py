@@ -3,6 +3,7 @@ from torch.utils.data import Dataset
 from PIL import Image
 from pathlib import Path
 from torchvision import transforms
+import random
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 json_file = BASE_DIR/"Configs"/"training.json"
@@ -12,19 +13,23 @@ class CustomImageDataset(Dataset):
         with open(json_file, "r") as f:
             data = json.load(f)
 
-        self.image_info = []
-        self.classes = set()
-
-        # Build list of image entries
+        # Group images by pose
+        pose_to_files = {}
         for file_name, v in data.items():
             if v.get("status") == "downloaded":  # only keep downloaded
                 pose = v["pose"]
-                self.image_info.append({
+                pose_to_files.setdefault(pose, []).append({
                     "path": v["path"],
                     "pose": pose,
                     "file_name": file_name
                 })
-                self.classes.add(pose)
+
+        
+        min_count = min(len(files) for files in pose_to_files.values())
+        self.image_info = []
+        for pose, files in pose_to_files.items():
+            chosen = random.sample(files, min_count)  # pick equal samples
+            self.image_info.extend(chosen)
 
         # Sorted list of unique poses
         self.classes = sorted(list(self.classes))
