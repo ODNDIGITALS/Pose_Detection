@@ -97,62 +97,62 @@ for epoch in range(50):
 
             preds = outputs.argmax(dim=1)
             correct += (preds == labels).sum().item()
-           
-        if batch_idx == 0:
-            fig, axes = plt.subplots(2, 8, figsize=(16, 4)) 
-            for i, ax in enumerate(axes.flat):
-                if i < len(inputs):
-                    img = inputs[i].cpu().numpy().transpose(1, 2, 0)
-                    img = np.clip(img * 255, 0, 255).astype(np.uint8)
+            
+            if batch_idx == 0:
+                fig, axes = plt.subplots(2, 8, figsize=(16, 4)) 
+                for i, ax in enumerate(axes.flat):
+                    if i < len(inputs):
+                        img = inputs[i].cpu().numpy().transpose(1, 2, 0)
+                        img = np.clip(img * 255, 0, 255).astype(np.uint8)
 
-                    gt = dataset.classes[labels[i].item()]
-                    pred = dataset.classes[preds[i].item()]
+                        gt = dataset.classes[labels[i].item()]
+                        pred = dataset.classes[preds[i].item()]
 
-                    # Ground truth
-                    cv2.rectangle(img, (5, 20), (250, 50), (0, 0, 0), -1)
-                    cv2.putText(img, f"Correct: {gt}", (10, 40),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6,
-                                (255, 255, 255), 1, cv2.LINE_AA)
+                        # Ground truth
+                        cv2.rectangle(img, (5, 20), (250, 50), (0, 0, 0), -1)
+                        cv2.putText(img, f"Correct: {gt}", (10, 40),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                                    (255, 255, 255), 1, cv2.LINE_AA)
 
-                    # Prediction
-                    color = (0, 255, 0) if gt == pred else (0, 0, 255)
-                    cv2.rectangle(img, (5, 55), (250, 85), (0, 0, 0), -1)
-                    cv2.putText(img, f"Predicted: {pred}", (10, 75),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6,
-                                color, 1, cv2.LINE_AA)
+                        # Prediction
+                        color = (0, 255, 0) if gt == pred else (0, 0, 255)
+                        cv2.rectangle(img, (5, 55), (250, 85), (0, 0, 0), -1)
+                        cv2.putText(img, f"Predicted: {pred}", (10, 75),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                                    color, 1, cv2.LINE_AA)
 
-                    ax.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-                    ax.set_title(f"{gt}/{pred}", fontsize=7)
-                    ax.axis("off")
-                else:
-                    ax.axis("off")
+                        ax.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+                        ax.set_title(f"{gt}/{pred}", fontsize=7)
+                        ax.axis("off")
+                    else:
+                        ax.axis("off")
 
-            writer.add_figure("Validation/Batch0_AllImages", fig, epoch)
+                writer.add_figure("Validation/Batch0_AllImages", fig, epoch)
 
-        elif batch_idx % 10 == 0:
-            i = np.random.randint(0, len(inputs))  # pick random image
-            img = inputs[i].cpu().numpy().transpose(1, 2, 0)
-            img = np.clip(img * 255, 0, 255).astype(np.uint8)
+            elif batch_idx % 10 == 0:
+                i = np.random.randint(0, len(inputs))  # pick random image
+                img = inputs[i].cpu().numpy().transpose(1, 2, 0)
+                img = np.clip(img * 255, 0, 255).astype(np.uint8)
 
-            gt = dataset.classes[labels[i].item()]
-            pred = dataset.classes[preds[i].item()]
+                gt = dataset.classes[labels[i].item()]
+                pred = dataset.classes[preds[i].item()]
 
-            # Ground truth
-            cv2.rectangle(img, (5, 20), (250, 50), (0, 0, 0), -1)
-            cv2.putText(img, f"Correct: {gt}", (10, 40),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6,
-                        (255, 255, 255), 1, cv2.LINE_AA)
+                # Ground truth
+                cv2.rectangle(img, (5, 20), (250, 50), (0, 0, 0), -1)
+                cv2.putText(img, f"Correct: {gt}", (10, 40),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                            (255, 255, 255), 1, cv2.LINE_AA)
 
-            # Prediction
-            color = (0, 255, 0) if gt == pred else (0, 0, 255)
-            cv2.rectangle(img, (5, 55), (250, 85), (0, 0, 0), -1)
-            cv2.putText(img, f"Predicted: {pred}", (10, 75),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6,
-                        color, 1, cv2.LINE_AA)
+                # Prediction
+                color = (0, 255, 0) if gt == pred else (0, 0, 255)
+                cv2.rectangle(img, (5, 55), (250, 85), (0, 0, 0), -1)
+                cv2.putText(img, f"Predicted: {pred}", (10, 75),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                            color, 1, cv2.LINE_AA)
 
-            # convert back to tensor for TensorBoard
-            img = torch.tensor(img.transpose(2, 0, 1)) / 255.0
-            writer.add_image(f"Validation/Sample_Batch{batch_idx}", img, epoch)
+                # convert back to tensor for TensorBoard
+                img = torch.tensor(img.transpose(2, 0, 1)) / 255.0
+                writer.add_image(f"Validation/Sample_Batch{batch_idx}", img, epoch)
 
     avg_val_loss = val_loss / len(val_loader)
     val_acc = correct / len(val_dataset)

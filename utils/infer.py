@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent
 checkpoint_path = BASE_DIR / "checkpoints" / "model_final.pth"
 
 # Update this with your actual classes (same order as training)
-class_names = ["back","detail_top_front","front","left","right"]
+class_names = ["back","detail","front","left","right"]
 
 def load_model(checkpoint_path, num_classes, device):
     model = build_resnet50(num_classes=num_classes, freeze_backbone=True)
