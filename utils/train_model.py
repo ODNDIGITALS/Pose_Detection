@@ -103,20 +103,28 @@ for epoch in range(50):
                     img_np = np.clip(img_np * 255, 0, 255).astype(np.uint8)
                     img_np = np.ascontiguousarray(img_np)
 
-                    cv2.putText(img_np, f"GT: {gt}", (5, 20),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2, cv2.LINE_AA)
+                    font_scale = 0.5  # smaller text
+                    thickness = 1
+                    font = cv2.FONT_HERSHEY_SIMPLEX
 
-                    text_size = cv2.getTextSize(f"Pred: {pred}", cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)[0]
-                    x_pos = img_np.shape[1] - text_size[0] - 5
-                    cv2.putText(img_np, f"Pred: {pred}", (x_pos, 20),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2, cv2.LINE_AA)
+                    # GT text
+                    gt_text = f"GT: {gt}"
+                    gt_size = cv2.getTextSize(gt_text, font, font_scale, thickness)[0]
+                    cv2.rectangle(img_np, (5, 5), (5 + gt_size[0], 5 + gt_size[1] + 5), (255, 255, 255), -1)
+                    cv2.putText(img_np, gt_text, (5, gt_size[1] + 5), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
 
-                    img_np = cv2.resize(img_np, (img_np.shape[1]*2, img_np.shape[0]*2),
-                                        interpolation=cv2.INTER_LINEAR)
+                    # Pred text
+                    pred_text = f"Pred: {pred}"
+                    pred_size = cv2.getTextSize(pred_text, font, font_scale, thickness)[0]
+                    x_pos = img_np.shape[1] - pred_size[0] - 5
+                    cv2.rectangle(img_np, (x_pos, 5), (x_pos + pred_size[0], 5 + pred_size[1] + 5), (255, 255, 255), -1)
+                    cv2.putText(img_np, pred_text, (x_pos, pred_size[1] + 5), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
+
+                    img_np = cv2.resize(img_np, (img_np.shape[1]*2, img_np.shape[0]*2), interpolation=cv2.INTER_LINEAR)
                     img_tensor = torch.tensor(img_np.transpose(2, 0, 1)) / 255.0
                     writer.add_image("Validation/Batch0_AllImages", img_tensor, epoch)
 
-            elif batch_idx % 10 == 0:
+            elif batch_idx % 5 == 0:
                 i = np.random.randint(0, len(inputs))
                 img = inputs[i].cpu().clone()
                 gt = dataset.classes[labels[i].item()]
@@ -126,18 +134,27 @@ for epoch in range(50):
                 img_np = np.clip(img_np * 255, 0, 255).astype(np.uint8)
                 img_np = np.ascontiguousarray(img_np)
 
-                cv2.putText(img_np, f"GT: {gt}", (5, 20),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2, cv2.LINE_AA)
+                font_scale = 0.5
+                thickness = 1
+                font = cv2.FONT_HERSHEY_SIMPLEX
 
-                text_size = cv2.getTextSize(f"Pred: {pred}", cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)[0]
-                x_pos = img_np.shape[1] - text_size[0] - 5
-                cv2.putText(img_np, f"Pred: {pred}", (x_pos, 20),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2, cv2.LINE_AA)
+                # GT text
+                gt_text = f"GT: {gt}"
+                gt_size = cv2.getTextSize(gt_text, font, font_scale, thickness)[0]
+                cv2.rectangle(img_np, (5, 5), (5 + gt_size[0], 5 + gt_size[1] + 5), (255, 255, 255), -1)
+                cv2.putText(img_np, gt_text, (5, gt_size[1] + 5), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
 
-                img_np = cv2.resize(img_np, (img_np.shape[1]*2, img_np.shape[0]*2),
-                                    interpolation=cv2.INTER_LINEAR)
+                # Pred text
+                pred_text = f"Pred: {pred}"
+                pred_size = cv2.getTextSize(pred_text, font, font_scale, thickness)[0]
+                x_pos = img_np.shape[1] - pred_size[0] - 5
+                cv2.rectangle(img_np, (x_pos, 5), (x_pos + pred_size[0], 5 + pred_size[1] + 5), (255, 255, 255), -1)
+                cv2.putText(img_np, pred_text, (x_pos, pred_size[1] + 5), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
+
+                img_np = cv2.resize(img_np, (img_np.shape[1]*2, img_np.shape[0]*2), interpolation=cv2.INTER_LINEAR)
                 img_tensor = torch.tensor(img_np.transpose(2, 0, 1)) / 255.0
                 writer.add_image(f"Validation/Sample_Batch{batch_idx}", img_tensor, epoch)
+
 
     avg_val_loss = val_loss / len(val_loader)
     val_acc = correct / len(val_dataset)
