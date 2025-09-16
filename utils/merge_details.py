@@ -10,7 +10,7 @@ if json_path.exists():
 
     for img_name, info in data.items():
         if "pose" in info and info["pose"] in ["detail_front", "detail_top"]:
-            info["pose"] = "detail_top_front"
+            info["pose"] = "detail"
 
     with open(json_path, "w") as f:
         json.dump(data, f, indent=4)
