@@ -32,7 +32,7 @@ def download_all_images_from_pose_bucket(download_dir=TRAINING_DIR / "training_i
     creds = get_aws_credentials()
     s3 = create_s3_client()
     paginator = s3.get_paginator("list_objects_v2")
-    skip_folder = {"outfit_front","tag","swatch","delete"}
+    skip_folder = {"outfit_front","tag","swatch","delete","flatlay_detail"}
     
     if os.path.exists(log_file):
         with open(log_file, "r") as f:

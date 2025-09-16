@@ -1,22 +1,16 @@
-import os
-import shutil
+import json
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-src1 = BASE_DIR/"training_images"/"detail_front"
-src2 = BASE_DIR/"training_images"/"detail_top"
-dst  = BASE_DIR/"training_images"/"detail_top_front"
+json_path = BASE_DIR / "Configs" / "training.json"
 
+if json_path.exists():
+    with open(json_path, "r") as f:
+        data = json.load(f)
 
-os.makedirs(dst, exist_ok=True)
+    for img_name, info in data.items():
+        if "pose" in info and info["pose"] in ["detail_front", "detail_top"]:
+            info["pose"] = "detail_top_front"
 
-for src in [src1, src2]:
-    for fname in os.listdir(src):
-        if fname.lower().endswith((".jpg", ".jpeg", ".png")):
-            src_path = os.path.join(src, fname)
-            dst_path = os.path.join(dst, fname)
-            shutil.copy(src_path, dst_path)
-
-for src in [src1, src2]: 
-     shutil.rmtree(src)
-print("Images combined into:", dst)
+    with open(json_path, "w") as f:
+        json.dump(data, f, indent=4)
