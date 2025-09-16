@@ -14,6 +14,7 @@ from custom_dataset import CustomImageDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau # Learning Rate Scheduler
 from early_stopping import EarlyStopping
 import json
+import cv2
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 json_file = BASE_DIR/"Configs"/"training.json"
@@ -48,7 +49,6 @@ scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3)
 early_stopping = EarlyStopping(patience=6, min_delta=0.001)
 
 os.makedirs("checkpoints", exist_ok=True)
-global_step = 0
 for epoch in range(50):
     model.train()
     running_loss = 0.0
@@ -70,8 +70,6 @@ for epoch in range(50):
         train_correct += (preds == labels).sum().item()
         total += labels.shape[0]
 
-        writer.add_scalar("Loss/Train_Batch", loss.item(), global_step) # monitors batch losses for each epoch
-        global_step+=1
         for fname in batch["file_name"]:
            if fname in training_data:
                training_data[fname]["status"] = "trained"
@@ -99,28 +97,66 @@ for epoch in range(50):
 
             preds = outputs.argmax(dim=1)
             correct += (preds == labels).sum().item()
+           
+        if batch_idx == 0:
+            fig, axes = plt.subplots(2, 8, figsize=(16, 4)) 
+            for i, ax in enumerate(axes.flat):
+                if i < len(inputs):
+                    img = inputs[i].cpu().numpy().transpose(1, 2, 0)
+                    img = np.clip(img * 255, 0, 255).astype(np.uint8)
 
-            # Save only first batch for visualization
-            if batch_idx == 0:
-                sample_images = inputs.cpu()
-                sample_preds = preds.cpu()
-                sample_labels = labels.cpu()
+                    gt = dataset.classes[labels[i].item()]
+                    pred = dataset.classes[preds[i].item()]
+
+                    # Ground truth
+                    cv2.rectangle(img, (5, 20), (250, 50), (0, 0, 0), -1)
+                    cv2.putText(img, f"Correct: {gt}", (10, 40),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                                (255, 255, 255), 1, cv2.LINE_AA)
+
+                    # Prediction
+                    color = (0, 255, 0) if gt == pred else (0, 0, 255)
+                    cv2.rectangle(img, (5, 55), (250, 85), (0, 0, 0), -1)
+                    cv2.putText(img, f"Predicted: {pred}", (10, 75),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                                color, 1, cv2.LINE_AA)
+
+                    ax.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+                    ax.set_title(f"{gt}/{pred}", fontsize=7)
+                    ax.axis("off")
+                else:
+                    ax.axis("off")
+
+            writer.add_figure("Validation/Batch0_AllImages", fig, epoch)
+
+        elif batch_idx % 10 == 0:
+            i = np.random.randint(0, len(inputs))  # pick random image
+            img = inputs[i].cpu().numpy().transpose(1, 2, 0)
+            img = np.clip(img * 255, 0, 255).astype(np.uint8)
+
+            gt = dataset.classes[labels[i].item()]
+            pred = dataset.classes[preds[i].item()]
+
+            # Ground truth
+            cv2.rectangle(img, (5, 20), (250, 50), (0, 0, 0), -1)
+            cv2.putText(img, f"Correct: {gt}", (10, 40),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                        (255, 255, 255), 1, cv2.LINE_AA)
+
+            # Prediction
+            color = (0, 255, 0) if gt == pred else (0, 0, 255)
+            cv2.rectangle(img, (5, 55), (250, 85), (0, 0, 0), -1)
+            cv2.putText(img, f"Predicted: {pred}", (10, 75),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+                        color, 1, cv2.LINE_AA)
+
+            # convert back to tensor for TensorBoard
+            img = torch.tensor(img.transpose(2, 0, 1)) / 255.0
+            writer.add_image(f"Validation/Sample_Batch{batch_idx}", img, epoch)
 
     avg_val_loss = val_loss / len(val_loader)
     val_acc = correct / len(val_dataset)
-    fig, axes = plt.subplots(2, 8, figsize=(16, 4))  # 16 images
-    for i, ax in enumerate(axes.flat):
-        if i < len(sample_images):
-            img = sample_images[i].numpy().transpose((1, 2, 0))
-            img = np.clip(img, 0, 1)
-            gt = dataset.classes[sample_labels[i]]
-            pred = dataset.classes[sample_preds[i]]
-            ax.imshow(img)
-            ax.set_title(f"GT:{gt}\nPred:{pred}", fontsize=7)
-            ax.axis("off")
-        else:
-            ax.axis("off")
-
+    
     early_stopping(avg_val_loss)     # early stopping
     if early_stopping.early_stop:
         print("Early stopping triggered!")
