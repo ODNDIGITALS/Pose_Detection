@@ -32,7 +32,7 @@ def download_all_images_from_pose_bucket(download_dir=TRAINING_DIR / "training_i
     creds = get_aws_credentials()
     s3 = create_s3_client()
     paginator = s3.get_paginator("list_objects_v2")
-    skip_folder = {"outfit_front","tag","swatch","delete","flatlay_detail","top"}
+    target_folder = {"detail_front","detail_top","front","back","left","right"}
     os.makedirs(os.path.dirname(log_file), exist_ok=True)
     
     if os.path.exists(log_file):
@@ -44,39 +44,38 @@ def download_all_images_from_pose_bucket(download_dir=TRAINING_DIR / "training_i
     for page in paginator.paginate(Bucket=creds["bucket_name"]):
         for obj in page.get("Contents", []):
             key = obj["Key"]  # "front/image1.jpg"
-            if key.lower().endswith(".jpg"):
-                image_name = os.path.basename(key)
-                pose = key.split("/")[0] if "/" in key else "unknown"
-                if pose in skip_folder:
-                    continue
-                # Skip if already present in log
-                if image_name in downloaded_data:
-                    print(f"Skipping {key} (already logged)")
-                    continue
+            if not any(key.startswith(folder) for folder in target_folder):
+                 continue
+            
+            image_name = os.path.basename(key)
+            pose = key.split("/")[0] if "/" in key else "unknown"
+            if image_name in downloaded_data:
+                print(f"Skipping {key} (already logged)")
+                continue
 
-                local_path = os.path.normpath(os.path.join(download_dir, key))
-                os.makedirs(os.path.dirname(local_path), exist_ok=True)
+            local_path = os.path.normpath(os.path.join(download_dir, key))
+            os.makedirs(os.path.dirname(local_path), exist_ok=True)
 
-                try:
-                    s3.download_file(creds["bucket_name"], key, local_path)
-                    status = "downloaded"
-                except Exception as e:
-                    status = f"error: {e}"
+            try:
+                s3.download_file(creds["bucket_name"], key, local_path)
+                status = "downloaded"
+            except Exception as e:
+                status = f"error: {e}"
 
 
-                # Store in dictionary
-                downloaded_data[image_name] = {
-                    "path": local_path,
-                    "status": status,
-                    "pose": pose,
-                }
+            # Store in dictionary
+            downloaded_data[image_name] = {
+                "path": local_path,
+                "status": status,
+                "pose": pose,
+            }
 
-                print(f"{key} → {local_path} [{status}]")
+            print(f"{key} → {local_path} [{status}]")
 
-                with open(log_file, "w") as f:
-                    json.dump(downloaded_data, f, indent=4)
-                    f.flush()
-                    os.fsync(f.fileno()) 
+            with open(log_file, "w") as f:
+                json.dump(downloaded_data, f, indent=4)
+                f.flush()
+                os.fsync(f.fileno()) 
 
     return downloaded_data
 
