@@ -32,7 +32,7 @@ class CustomImageDataset(Dataset):
             self.image_info.extend(chosen)
 
         # Sorted list of unique poses
-        self.classes = sorted(list(self.classes))
+        self.classes = sorted(pose_to_files.keys())
         self.class_to_idx = {cls: i for i, cls in enumerate(self.classes)}
         self.transform = transform
 
