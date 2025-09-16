@@ -85,7 +85,6 @@ for epoch in range(50):
 
     model.eval()
     val_loss, correct = 0.0, 0
-    sample_images, sample_preds, sample_labels = [], [], []
     with torch.no_grad():
         for batch_idx, batch in enumerate(val_loader):
             inputs = batch["tensor"].to(device)
@@ -97,7 +96,7 @@ for epoch in range(50):
 
             preds = outputs.argmax(dim=1)
             correct += (preds == labels).sum().item()
-            
+
             if batch_idx == 0:
                 fig, axes = plt.subplots(2, 8, figsize=(16, 4)) 
                 for i, ax in enumerate(axes.flat):
