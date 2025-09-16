@@ -111,14 +111,14 @@ for epoch in range(50):
                     gt_text = f"GT: {gt}"
                     gt_size = cv2.getTextSize(gt_text, font, font_scale, thickness)[0]
                     cv2.rectangle(img_np, (5, 5), (5 + gt_size[0], 5 + gt_size[1] + 5), (255, 255, 255), -1)
-                    cv2.putText(img_np, gt_text, (5, gt_size[1] + 5), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
+                    cv2.putText(img_np, gt_text, (5, gt_size[1] + 5), font, font_scale, (255, 0, 0), thickness, cv2.LINE_AA)
 
                     # Pred text
                     pred_text = f"Pred: {pred}"
                     pred_size = cv2.getTextSize(pred_text, font, font_scale, thickness)[0]
                     x_pos = img_np.shape[1] - pred_size[0] - 5
                     cv2.rectangle(img_np, (x_pos, 5), (x_pos + pred_size[0], 5 + pred_size[1] + 5), (255, 255, 255), -1)
-                    cv2.putText(img_np, pred_text, (x_pos, pred_size[1] + 5), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
+                    cv2.putText(img_np, pred_text, (x_pos, pred_size[1] + 5), font, font_scale, (255, 0, 0), thickness, cv2.LINE_AA)
 
                     img_np = cv2.resize(img_np, (img_np.shape[1]*2, img_np.shape[0]*2), interpolation=cv2.INTER_LINEAR)
                     img_tensor = torch.tensor(img_np.transpose(2, 0, 1)) / 255.0
@@ -142,14 +142,14 @@ for epoch in range(50):
                 gt_text = f"GT: {gt}"
                 gt_size = cv2.getTextSize(gt_text, font, font_scale, thickness)[0]
                 cv2.rectangle(img_np, (5, 5), (5 + gt_size[0], 5 + gt_size[1] + 5), (255, 255, 255), -1)
-                cv2.putText(img_np, gt_text, (5, gt_size[1] + 5), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
+                cv2.putText(img_np, gt_text, (5, gt_size[1] + 5), font, font_scale, (255, 0, 0), thickness, cv2.LINE_AA)
 
                 # Pred text
                 pred_text = f"Pred: {pred}"
                 pred_size = cv2.getTextSize(pred_text, font, font_scale, thickness)[0]
                 x_pos = img_np.shape[1] - pred_size[0] - 5
                 cv2.rectangle(img_np, (x_pos, 5), (x_pos + pred_size[0], 5 + pred_size[1] + 5), (255, 255, 255), -1)
-                cv2.putText(img_np, pred_text, (x_pos, pred_size[1] + 5), font, font_scale, (0, 0, 0), thickness, cv2.LINE_AA)
+                cv2.putText(img_np, pred_text, (x_pos, pred_size[1] + 5), font, font_scale, (255, 0, 0), thickness, cv2.LINE_AA)
 
                 img_np = cv2.resize(img_np, (img_np.shape[1]*2, img_np.shape[0]*2), interpolation=cv2.INTER_LINEAR)
                 img_tensor = torch.tensor(img_np.transpose(2, 0, 1)) / 255.0
