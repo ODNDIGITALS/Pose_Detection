@@ -2,4 +2,4 @@
 venv
 training_images
 *.jpg
-Configs
+Configs\training.json
