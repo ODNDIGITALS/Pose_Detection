@@ -55,13 +55,13 @@ class CustomImageDataset(Dataset):
             "file_name": file_name
         }
 
-train_transform = transforms.Compose([
-    transforms.RandomRotation(degrees=30),
-    transforms.Resize((224, 224)),
-    transforms.ToTensor()
-])
+# train_transform = transforms.Compose([
+#     transforms.RandomRotation(degrees=30),
+#     transforms.Resize((224, 224)),
+#     transforms.ToTensor()
+# ])
     
-dataset = CustomImageDataset(json_file=json_file,transform=train_transform)
+# dataset = CustomImageDataset(json_file=json_file,transform=train_transform)
 # all_samples = []
 
 # attribute = dataset[0]

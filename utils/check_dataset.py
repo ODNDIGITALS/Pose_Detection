@@ -22,9 +22,9 @@ def count_images_per_pose(json_file):
     return pose_counts
 
 
-counts = count_images_per_pose(json_file)
+# counts = count_images_per_pose(json_file)
 
-print("Images per pose:")
-for pose, stats in counts.items():
-    print(f"{pose}: Downloaded={stats['downloaded']}, Trained={stats['trained']}")
+# print("Images per pose:")
+# for pose, stats in counts.items():
+#     print(f"{pose}: Downloaded={stats['downloaded']}, Trained={stats['trained']}")
 
