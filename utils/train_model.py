@@ -7,10 +7,10 @@ import torch.optim as optim
 from torchvision import transforms
 from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
-from model import build_resnet50   
-from custom_dataset import CustomImageDataset
+from utils.model import build_resnet50   
+from utils.custom_dataset import CustomImageDataset
 from torch.optim.lr_scheduler import ReduceLROnPlateau
-from early_stopping import EarlyStopping
+from utils.early_stopping import EarlyStopping
 import json
 import cv2
 def train(epochs = 50,batch_size = 16):
