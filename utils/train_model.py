@@ -102,22 +102,35 @@ def train(epochs = 50,batch_size = 16):
                 preds = outputs.argmax(dim=1)
                 correct += (preds == labels).sum().item()
 
-                img = inputs[0].cpu()
-                label_idx = labels[0].item()
-                pred_idx = preds[0].item()
-                fname = batch["file_name"][0]  
+                img = inputs[0].cpu().clone()
+                gt = dataset.classes[labels[0].item()]
+                pred = dataset.classes[preds[0].item()]
+                fname = batch["file_name"][0]
 
                 img_np = img.numpy().transpose(1, 2, 0)
                 img_np = np.clip(img_np * 255, 0, 255).astype(np.uint8)
+                img_np = np.ascontiguousarray(img_np)
 
+                font_scale = 0.5
+                thickness = 1
                 font = cv2.FONT_HERSHEY_SIMPLEX
-                cv2.putText(img_np, f"GT: {dataset.classes[label_idx]}", (5, 20),
-                            font, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
-                cv2.putText(img_np, f"Pred: {dataset.classes[pred_idx]}", (5, 40),
-                            font, 0.5, (0, 0, 255), 1, cv2.LINE_AA)
+
+                gt_text = f"GT: {gt}"
+                gt_size = cv2.getTextSize(gt_text, font, font_scale, thickness)[0]
+                cv2.rectangle(img_np, (5, 5), (5 + gt_size[0], 5 + gt_size[1] + 5), (255, 255, 255), -1)
+                cv2.putText(img_np, gt_text, (5, gt_size[1] + 5), font, font_scale, (255, 0, 0), thickness, cv2.LINE_AA)
+
+                pred_text = f"Pred: {pred}"
+                pred_size = cv2.getTextSize(pred_text, font, font_scale, thickness)[0]
+                x_pos = img_np.shape[1] - pred_size[0] - 5
+                cv2.rectangle(img_np, (x_pos, 5), (x_pos + pred_size[0], 5 + pred_size[1] + 5), (255, 255, 255), -1)
+                cv2.putText(img_np, pred_text, (x_pos, pred_size[1] + 5), font, font_scale, (255, 0, 0), thickness, cv2.LINE_AA)
+
+                img_np = cv2.resize(img_np, (img_np.shape[1] * 2, img_np.shape[0] * 2), interpolation=cv2.INTER_LINEAR)
 
                 img_tensor = torch.tensor(img_np.transpose(2, 0, 1)) / 255.0
                 writer.add_image(f"Validation/{fname}", img_tensor, global_step=epoch)
+
 
         avg_val_loss = val_loss / len(val_loader)
         val_acc = correct / len(val_dataset)
