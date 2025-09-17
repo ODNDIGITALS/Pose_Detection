@@ -13,6 +13,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from utils.early_stopping import EarlyStopping
 import json
 import cv2
+import random
+
 def train(epochs = 50,batch_size = 16):
     BASE_DIR = Path(__file__).resolve().parent.parent
     json_file = BASE_DIR / "Configs" / "training.json"
@@ -27,13 +29,29 @@ def train(epochs = 50,batch_size = 16):
     #     transforms.Resize((224, 224)),
     #     transforms.ToTensor()
     # ])
+    # transform = transforms.Compose([
+    #     transforms.RandomChoice([
+    #         transforms.RandomRotation((0,0)),
+    #         transforms.RandomRotation((90, 90)),   
+    #         transforms.RandomRotation((180, 180)), 
+    #         transforms.RandomRotation((270, 270))  
+    #     ]),
+    #     transforms.Resize((224, 224)),
+    #     transforms.ToTensor()
+    # ])
+    class RandomRotate20:
+        def __init__(self, angles=(90, 180, 270), p=0.2):
+            self.angles = angles
+            self.p = p
+
+        def __call__(self, img):
+            if random.random() < self.p:
+                angle = random.choice(self.angles)
+                return transforms.functional.rotate(img, angle)
+            return img
+
     transform = transforms.Compose([
-        transforms.RandomChoice([
-            transforms.RandomRotation((0,0)),
-            transforms.RandomRotation((90, 90)),   
-            transforms.RandomRotation((180, 180)), 
-            transforms.RandomRotation((270, 270))  
-        ]),
+        RandomRotate20(p=0.2),
         transforms.Resize((224, 224)),
         transforms.ToTensor()
     ])
