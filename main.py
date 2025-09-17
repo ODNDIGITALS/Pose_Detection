@@ -7,18 +7,20 @@ def main():
     parser = argparse.ArgumentParser(description="Custom Script Commands")
     subparsers = parser.add_subparsers(dest="command", required=True, help="Choose a command to run")
 
-    # Command 1: download_images
-    subparsers.add_parser("download_images", help="Download images and merge details")
+    parser_download = subparsers.add_parser("download_images", help="Download images and merge details")
 
     parser_train = subparsers.add_parser("train_model", help="Train ResNet50 on existing dataset")
     parser_train.add_argument("--epochs", type=int, default=50, help="Number of training epochs")
     parser_train.add_argument("--batch_size", type=int, default=16, help="Batch size for training")
 
-    parser_train = subparsers.add_parser("download_and_train", help="Download images, merge details, and train")
-    parser_train.add_argument("--epochs", type=int, default=50, help="Number of training epochs")
-    parser_train.add_argument("--batch_size", type=int, default=16, help="Batch size for training")
+    parser_download_train = subparsers.add_parser(
+        "download_and_train", help="Download images, merge details, and train"
+    )
+    parser_download_train.add_argument("--epochs", type=int, default=50, help="Number of training epochs")
+    parser_download_train.add_argument("--batch_size", type=int, default=16, help="Batch size for training")
 
     args = parser.parse_args()
+
 
     if args.command == "download_images":
         metadata = download_all_images_from_pose_bucket()
