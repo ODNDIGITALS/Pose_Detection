@@ -19,7 +19,14 @@ def train(epochs = 50,batch_size = 16):
     BASE_DIR = Path(__file__).resolve().parent.parent
     json_file = BASE_DIR / "Configs" / "training.json"
     os.makedirs("checkpoints", exist_ok=True)
-    checkpoint_path = BASE_DIR / "checkpoints" / "model_final.pth"
+    checkpoint_dir = BASE_DIR / "checkpoints"
+    all_files = os.listdir(checkpoint_dir)
+
+    if all_files:
+        all_files.sort(key=lambda f: os.path.getmtime(f))
+        latest_checkpoint = checkpoint_dir / all_files[-1] 
+    else:
+        latest_checkpoint = None
 
     with open(json_file, "r") as f:
         training_data = json.load(f)
@@ -71,10 +78,9 @@ def train(epochs = 50,batch_size = 16):
 
     criterion = nn.CrossEntropyLoss()
 
-    checkpoint_exists = os.path.exists(checkpoint_path)
-
+    checkpoint_exists = latest_checkpoint is not None and os.path.exists(latest_checkpoint)
     if checkpoint_exists:
-        checkpoint = torch.load(checkpoint_path, map_location=device)
+        checkpoint = torch.load(latest_checkpoint, map_location=device)
         model.load_state_dict(checkpoint)
         print("Loaded model weights from checkpoint.")
     else:
@@ -83,7 +89,7 @@ def train(epochs = 50,batch_size = 16):
     if checkpoint_exists:
         lr = 1e-5   
     else:
-        lr = 1e-4   
+        lr = 1e-3   
     
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3)
@@ -183,7 +189,3 @@ def train(epochs = 50,batch_size = 16):
             f"Val Loss = {avg_val_loss:.4f}, Val Acc = {val_acc:.4f}")
 
         torch.save(model.state_dict(), f"checkpoints/model_epoch_{epoch+1}.pth")
-
-    torch.save(model.state_dict(), "checkpoints/model_final.pth")
-
-
