@@ -11,10 +11,15 @@ def build_resnet50(num_classes=5, freeze_backbone=True):
 
     num_ftrs = resnet.fc.in_features
     resnet.fc = nn.Sequential(
-        nn.Linear(num_ftrs, 512),
-        nn.ReLU(),
-        nn.Dropout(0.5),
-        nn.Linear(512, num_classes)
+        nn.Linear(num_ftrs, 1024),
+        nn.BatchNorm1d(1024),
+        nn.ReLU(inplace=True),
+        nn.Dropout(0.45),
+        nn.Linear(1024, 256),
+        nn.BatchNorm1d(256),
+        nn.ReLU(inplace=True),
+        nn.Dropout(0.45),
+        nn.Linear(256, num_classes)
     )
 
     # Ensure FC is trainable

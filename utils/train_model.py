@@ -79,10 +79,10 @@ def train(epochs = 50,batch_size = 16):
 
     criterion = nn.CrossEntropyLoss()
 
-    default_lr = 1e-3
+    default_lr = 1e-4
     optimizer = optim.Adam(model.parameters(), lr=default_lr)
-    scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.1, patience=3)
-    early_stopping = EarlyStopping(patience=6, min_delta=0.001) 
+    scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.1, patience=4)
+    early_stopping = EarlyStopping(patience=8, min_delta=0.001) 
     
     start_epoch = 0
     if latest_checkpoint and latest_checkpoint.exists():
