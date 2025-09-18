@@ -13,18 +13,15 @@ class CustomImageDataset(Dataset):
         with open(json_file, "r") as f:
             data = json.load(f)
 
-        # Group images by pose
         pose_to_files = {}
         for file_name, v in data.items():
-            if v.get("status") == "downloaded":  # only keep downloaded
-                pose = v["pose"]
-                pose_to_files.setdefault(pose, []).append({
-                    "path": v["path"],
-                    "pose": pose,
-                    "file_name": file_name
-                })
+            pose = v["pose"]
+            pose_to_files.setdefault(pose, []).append({
+                "path": v["path"],
+                "pose": pose,
+                "file_name": file_name
+            })
 
-        
         min_count = min(len(files) for files in pose_to_files.values())
         self.image_info = []
         for pose, files in pose_to_files.items():

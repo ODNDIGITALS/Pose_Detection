@@ -129,8 +129,8 @@ def train(epochs = 50,batch_size = 16):
 
         avg_train_loss = running_loss / len(train_loader)
         train_acc = train_correct / total
-        writer.add_scalar("Loss/Train_Epoch", avg_train_loss, epoch)
-        writer.add_scalar("Accuracy/Train", train_acc, epoch)
+        writer.add_scalar("Loss/Train_Epoch", avg_train_loss, start_epoch+epoch)
+        writer.add_scalar("Accuracy/Train", train_acc, start_epoch+epoch)
 
         model.eval()
         val_loss, correct = 0.0, 0
@@ -173,7 +173,7 @@ def train(epochs = 50,batch_size = 16):
                 img_np = cv2.resize(img_np, (img_np.shape[1] * 2, img_np.shape[0] * 2), interpolation=cv2.INTER_LINEAR)
 
                 img_tensor = torch.tensor(img_np.transpose(2, 0, 1)) / 255.0
-                writer.add_image(f"Validation/{fname}", img_tensor, global_step=epoch)
+                writer.add_image(f"Validation/{fname}", img_tensor, start_epoch+epoch)
 
 
         avg_val_loss = val_loss / len(val_loader)
@@ -184,11 +184,11 @@ def train(epochs = 50,batch_size = 16):
             print("Early stopping triggered!")
             break
 
-        writer.add_scalar("Loss/Validation", avg_val_loss, epoch)
-        writer.add_scalar("Accuracy/Validation", val_acc, epoch)
+        writer.add_scalar("Loss/Validation", avg_val_loss,start_epoch+epoch)
+        writer.add_scalar("Accuracy/Validation", val_acc, start_epoch+epoch)
 
         scheduler.step(avg_val_loss)
-        writer.add_scalar("LR", optimizer.param_groups[0]["lr"], epoch)
+        writer.add_scalar("LR", optimizer.param_groups[0]["lr"], start_epoch+epoch)
 
         print(f"Epoch {epoch+1}: Train Loss = {avg_train_loss:.4f}, "
             f"Val Loss = {avg_val_loss:.4f}, Val Acc = {val_acc:.4f}")
