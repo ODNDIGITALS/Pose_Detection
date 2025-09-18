@@ -26,10 +26,6 @@ def train(epochs = 50,batch_size = 16):
     if all_files:
         all_files.sort(key=lambda f: os.path.getmtime(f))
         latest_checkpoint = all_files[-1] 
-        import re
-        match = re.search(r'model_epoch_(\d+).pth', latest_checkpoint.name) 
-        if match:
-            start_epoch = int(match.group(1)) 
     else:
         latest_checkpoint = None
 
@@ -83,22 +79,27 @@ def train(epochs = 50,batch_size = 16):
 
     criterion = nn.CrossEntropyLoss()
 
-    checkpoint_exists = latest_checkpoint is not None and os.path.exists(latest_checkpoint)
-    if checkpoint_exists:
-        checkpoint = torch.load(latest_checkpoint, map_location=device)
-        model.load_state_dict(checkpoint)
-        print("Loaded model weights from checkpoint.")
-    else:
-        print("No checkpoint found. Starting from scratch.")
-
-    if checkpoint_exists:
-        lr = 1e-5   
-    else:
-        lr = 1e-3   
+    default_lr = 1e-3
+    optimizer = optim.Adam(model.parameters(), lr=default_lr)
+    scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.1, patience=3)
+    early_stopping = EarlyStopping(patience=6, min_delta=0.001) 
     
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3)
-    early_stopping = EarlyStopping(patience=6, min_delta=0.001)
+    start_epoch = 0
+    if latest_checkpoint and latest_checkpoint.exists():
+        checkpoint = torch.load(latest_checkpoint, map_location=device)
+        model.load_state_dict(checkpoint["model_state_dict"])
+        optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+
+        # Restore LR explicitly
+        if "lr" in checkpoint:
+            for g in optimizer.param_groups:
+                g["lr"] = checkpoint["lr"]
+
+        start_epoch = checkpoint["epoch"] + 1
+        print(f"Resuming from epoch {start_epoch}, LR restored to {optimizer.param_groups[0]['lr']:.2e}")
+    else:
+        print(f"No checkpoint found. Starting fresh with LR = {default_lr:.2e}")
 
     for epoch in range(start_epoch,start_epoch+epochs):
         model.train()
@@ -193,4 +194,9 @@ def train(epochs = 50,batch_size = 16):
         print(f"Epoch {epoch+1}: Train Loss = {avg_train_loss:.4f}, "
             f"Val Loss = {avg_val_loss:.4f}, Val Acc = {val_acc:.4f}")
 
-        torch.save(model.state_dict(), f"checkpoints/model_epoch_{epoch+1}.pth")
+        torch.save({
+            "epoch": epoch,
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "scheduler_state_dict": scheduler.state_dict(),
+            "lr": optimizer.param_groups[0]["lr"]},f"checkpoints/model_epoch_{epoch+1}.pth")
