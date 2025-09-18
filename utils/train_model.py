@@ -21,10 +21,15 @@ def train(epochs = 50,batch_size = 16):
     os.makedirs("checkpoints", exist_ok=True)
     checkpoint_dir = BASE_DIR / "checkpoints"
     all_files = list(checkpoint_dir.glob("*.pth"))
+    start_epoch = 0
 
     if all_files:
         all_files.sort(key=lambda f: os.path.getmtime(f))
-        latest_checkpoint = checkpoint_dir / all_files[-1] 
+        latest_checkpoint = checkpoint_dir / all_files[-1]
+        import re
+        match = re.search(r'model_epoch_(\d+).pth', str(latest_checkpoint))
+        if match:
+            start_epoch = int(match.group(1)) 
     else:
         latest_checkpoint = None
 
@@ -95,7 +100,7 @@ def train(epochs = 50,batch_size = 16):
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3)
     early_stopping = EarlyStopping(patience=6, min_delta=0.001)
 
-    for epoch in range(epochs):
+    for epoch in range(start_epoch,start_epoch+epochs):
         model.train()
         running_loss = 0.0
         train_correct, total = 0, 0
