@@ -18,6 +18,8 @@ import random
 def train(epochs = 50,batch_size = 16):
     BASE_DIR = Path(__file__).resolve().parent.parent
     json_file = BASE_DIR / "Configs" / "training.json"
+    os.makedirs("checkpoints", exist_ok=True)
+    checkpoint_path = BASE_DIR / "checkpoints" / "model_final.pth"
 
     with open(json_file, "r") as f:
         training_data = json.load(f)
@@ -68,11 +70,24 @@ def train(epochs = 50,batch_size = 16):
     model.to(device)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-3)
+
+    checkpoint_exists = os.path.exists(checkpoint_path)
+
+    if checkpoint_exists:
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+        model.load_state_dict(checkpoint)
+        print("Loaded model weights from checkpoint.")
+    else:
+        print("No checkpoint found. Starting from scratch.")
+
+    if checkpoint_exists:
+        lr = 1e-5   
+    else:
+        lr = 1e-4   
+    
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=3)
     early_stopping = EarlyStopping(patience=6, min_delta=0.001)
-
-    os.makedirs("checkpoints", exist_ok=True)
 
     for epoch in range(epochs):
         model.train()
