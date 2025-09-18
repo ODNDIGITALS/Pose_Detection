@@ -20,7 +20,7 @@ def train(epochs = 50,batch_size = 16):
     json_file = BASE_DIR / "Configs" / "training.json"
     os.makedirs("checkpoints", exist_ok=True)
     checkpoint_dir = BASE_DIR / "checkpoints"
-    all_files = os.listdir(checkpoint_dir)
+    all_files = list(checkpoint_dir.glob("*.pth"))
 
     if all_files:
         all_files.sort(key=lambda f: os.path.getmtime(f))
